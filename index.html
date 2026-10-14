@@ -225,6 +225,10 @@ html,body{overflow-x:hidden}
  body.shake main{animation:none} #toast.show{animation:none} #tm.crit{animation:none}
 }
 
+#lvb.hot{background:var(--red)} #lvb.hot b{color:#fff}
+section,.case,.q,.d,.lab,.sub,h2,.gap{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,#copybox textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+
 /* ====== ЭФФЕКТЫ ====== */
 #fx{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:0}
 #fx.bad{animation:fxbad .5s steps(1,end) 1}
@@ -233,10 +237,10 @@ html,body{overflow-x:hidden}
 @keyframes fxok{0%{background:#3ad14a;opacity:.6}33%{opacity:0}66%{background:#3ad14a;opacity:.5}100%{opacity:0}}
 body.shake main{animation:sh .35s steps(1,end) 2}
 @keyframes sh{0%{transform:translate(0,0)}25%{transform:translate(-8px,0)}50%{transform:translate(8px,0)}75%{transform:translate(-4px,0)}100%{transform:translate(0,0)}}
-#toast{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:70;
+#toast{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:70;max-width:90vw;
  font-size:16px;text-transform:uppercase;padding:16px 22px;
  border:var(--b) solid #fff;outline:var(--b) solid #000;
- opacity:0;pointer-events:none;white-space:nowrap;text-align:center}
+ opacity:0;pointer-events:none;white-space:normal;text-align:center;line-height:1.5}
 #toast.show{opacity:1;animation:jit .25s steps(2,end) infinite}
 #toast.ok{background:#1b7a2a;color:#fff}
 #toast.bad{background:#b31414;color:#fff}
@@ -299,6 +303,7 @@ body.shake main{animation:sh .35s steps(1,end) 2}
  <div class="badge" id="tm">—</div>
  <div class="badge">Блок <b id="bn">0</b>/13</div>
  <div class="badge">Баллы <b id="sc">0</b></div>
+ <div class="badge" id="lvb">Выходы <b id="lv">0</b></div>
 </div><div class="bar"><i id="pb" style="width:0"></i></div></header>
 
 <div id="fx"></div><div id="toast"></div>
@@ -554,7 +559,7 @@ function fx(good,txt){const f=el('fx');f.className='';void f.offsetWidth;f.class
   document.body.classList.add('shake');setTimeout(()=>document.body.classList.remove('shake'),700)}
  const t=el('toast');t.textContent=txt||(good?'ОТЛИЧНО!':'ЕСТЬ ОШИБКИ');
  t.className=(good?'ok':'bad')+' show';clearTimeout(t._h);
- t._h=setTimeout(()=>t.classList.remove('show'),good?1200:1600);
+ t._h=setTimeout(()=>t.classList.remove('show'),good?1200:(txt&&txt.length>30?3500:1600));
  try{if(!window._ac){window._ac=new (window.AudioContext||window.webkitAudioContext)()}
   const a=window._ac;if(a.state==='suspended')a.resume();
   const o=a.createOscillator(),g=a.createGain();o.type='square';
@@ -718,16 +723,54 @@ function h32(t){let h=2166136261>>>0;for(let i=0;i<t.length;i++){h^=t.charCodeAt
 function nname(t){return norm(t).replace(/\s+/g,' ')}
 function enc(n,len){let r='';for(let i=0;i<len;i++){r=AL[n%32]+r;n=Math.floor(n/32)}return r}
 function dec(t){let n=0;for(const c of t){const v=AL.indexOf(c);if(v<0)return -1;n=n*32+v}return n}
-function mkCode(name,sc){
- const nm=nname(name),mask=h32(SALT+'|'+nm)&127,mac=h32(SALT+'#'+nm+'#'+sc)&262143;
- return enc(((sc^mask)&127)*262144+mac,5)}
+/* 25 бит: баллы (7) + выходы 0..7 (3) + подпись (15) */
+function mkCode(name,sc,lv){
+ const nm=nname(name),k=h32(SALT+'|'+nm);lv=Math.min(7,lv|0);
+ const mac=h32(SALT+'#'+nm+'#'+sc+'#'+lv)&32767;
+ return enc((((sc^k)&127)*8+((lv^(k>>>7))&7))*32768+mac,5)}
 function readCode(name,code){
  const c=String(code).toUpperCase().replace(/[^0-9A-Z]/g,'').replace(/O/g,'0').replace(/I/g,'1');
  if(c.length!==5)return null;const n=dec(c);if(n<0)return null;
- const nm=nname(name),sc=(Math.floor(n/262144)^(h32(SALT+'|'+nm)&127))&127;
- if((h32(SALT+'#'+nm+'#'+sc)&262143)!==n%262144)return null;
- return {score:sc}}
+ const nm=nname(name),k=h32(SALT+'|'+nm),hi=Math.floor(n/32768);
+ const sc=(Math.floor(hi/8)^k)&127, lv=((hi%8)^(k>>>7))&7;
+ if((h32(SALT+'#'+nm+'#'+sc+'#'+lv)&32767)!==n%32768)return null;
+ return {score:sc,leaves:lv}}
 let CODE='';
+
+/* --- учёт выходов со страницы --- */
+let LEAVES=0,away=false,awayT=0;
+function active(){return location.hash!=='#check'&&cur>0&&BLOCKS[cur]&&BLOCKS[cur].id!=='fin'}
+function goAway(){if(away||!active())return;away=true;awayT=Date.now();LEAVES++;
+ el('lv').textContent=LEAVES;el('lvb').classList.add('hot')}
+function comeBack(){if(!away)return;away=false;
+ const sec=Math.round((Date.now()-awayT)/1000);
+ fx(false,'Вы покинули работу: '+LEAVES+' '+(LEAVES%10>=2&&LEAVES%10<=4&&(LEAVES%100<12||LEAVES%100>14)?'раза':'раз')+(sec>1?' ('+sec+' с)':'')+'. Это видно преподавателю.')}
+document.addEventListener('visibilitychange',()=>{document.hidden?goAway():comeBack()});
+window.addEventListener('blur',()=>setTimeout(()=>{if(!document.hasFocus())goAway()},150));
+window.addEventListener('focus',comeBack);
+window.addEventListener('pagehide',goAway);
+
+/* --- запрет копирования и вставки --- */
+function inCheck(){return location.hash==='#check'}
+function isField(t){return t&&(t.tagName==='TEXTAREA'||t.tagName==='INPUT')}
+['copy','cut'].forEach(ev=>document.addEventListener(ev,e=>{
+ if(inCheck())return;const t=e.target;
+ if(t&&t.closest&&t.closest('#copybox'))return;
+ e.preventDefault();fx(false,'Копирование отключено')}));
+document.addEventListener('contextmenu',e=>{if(!inCheck()&&!(e.target.closest&&e.target.closest('#copybox')))e.preventDefault()});
+['paste','drop'].forEach(ev=>document.addEventListener(ev,e=>{
+ if(inCheck()||!isField(e.target)||e.target.id==='name')return;
+ e.preventDefault();fx(false,'Вставка отключена — пишите сами')},true));
+document.addEventListener('dragstart',e=>{if(!inCheck())e.preventDefault()});
+/* клавиатуры телефонов вставляют из буфера без события paste — ловим резкий скачок текста */
+document.addEventListener('beforeinput',e=>{
+ if(inCheck()||!isField(e.target)||e.target.id==='name')return;
+ if(/^insertFrom(Paste|Drop|Yank)/.test(e.inputType||'')){e.preventDefault();fx(false,'Вставка отключена — пишите сами');return}
+ e.target._prev=e.target.value},true);
+document.addEventListener('input',e=>{const t=e.target;
+ if(inCheck()||!isField(t)||t.id==='name'||t._prev===undefined)return;
+ if(t.value.length-t._prev.length>25){t.value=t._prev;fx(false,'Вставка отключена — пишите сами')}
+ t._prev=t.value},true);
 
 /* --- итог --- */
 function grade(p){return p>=.88?5:p>=.72?4:p>=.55?3:p>=.35?2:1}
@@ -737,12 +780,13 @@ function fin(){tstop();el('tm').textContent='—';el('tm').className='badge';
  el('fgs').textContent={5:'отлично',4:'хорошо',3:'удовлетворительно',2:'неудовлетворительно',1:'тему нужно повторить'}[g];
  el('fsc').textContent=score;el('fmax').textContent=MAXSUM;
  el('fwho').textContent=el('name').value||'';
- if(!CODE)CODE=mkCode(el('name').value,score);el('fcode').textContent=CODE;
+ if(!CODE)CODE=mkCode(el('name').value,score,LEAVES);el('fcode').textContent=CODE;
  let h='';for(const k in res)h+='<tr><td>'+k+'</td><td>'+res[k]+'</td></tr>';
+ h+='<tr><td>Выходы со страницы</td><td>'+LEAVES+'</td></tr>';
  el('ftab').innerHTML=h}
 function dl(){const name=el('name').value||'без имени';
  let s='Тема 1.5. Интерактивная работа\nСтудент: '+name+'\nОценка: '+grade(score/MAXSUM)+
-  '\nБаллы: '+score+' из '+MAXSUM+'\nКод: '+CODE+'\n\n';
+  '\nБаллы: '+score+' из '+MAXSUM+'\nВыходы со страницы: '+LEAVES+'\nКод: '+CODE+'\n\n';
  for(const k in res)s+=k+': '+res[k]+'\n';
  WRITE.forEach(W=>{const t=el(W.id);if(t&&t.value.trim())s+='\n--- '+W.task.slice(0,48)+'... ---\n'+t.value.trim()+'\n'});
  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -913,6 +957,6 @@ function startCheck(){
  el('cb').onclick=()=>{const r=readCode(el('cn').value,el('cc').value),o=el('cr');
   if(!r||r.score>MAXSUM){o.className='res bad';o.innerHTML='Код не подходит к этому имени. Он подделан, введён с ошибкой или имя написано иначе, чем в работе.';return}
   const g=grade(r.score/MAXSUM);
-  o.className='res ok';o.innerHTML='Код настоящий.<br>Баллы: <b>'+r.score+' из '+MAXSUM+'</b><br>Оценка: <b>'+g+'</b>'}}
+  o.className='res ok';o.innerHTML='Код настоящий.<br>Баллы: <b>'+r.score+' из '+MAXSUM+'</b><br>Оценка: <b>'+g+'</b><br>Выходы со страницы: <b>'+(r.leaves>=7?'7 и более':r.leaves)+'</b>'+(r.leaves>0?' — студент переключался в другие приложения или вкладки':'')}}
 </script>
 </body></html>
