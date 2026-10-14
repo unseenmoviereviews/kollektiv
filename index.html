@@ -735,6 +735,20 @@ function readCode(name,code){
  const sc=(Math.floor(hi/8)^k)&127, lv=((hi%8)^(k>>>7))&7;
  if((h32(SALT+'#'+nm+'#'+sc+'#'+lv)&32767)!==n%32768)return null;
  return {score:sc,leaves:lv}}
+/* коды прежних версий страницы (если у студента была открыта старая версия) */
+function readCodeOld(name,code){
+ const c=String(code).toUpperCase().replace(/[^0-9A-Z]/g,'').replace(/O/g,'0').replace(/I/g,'1');
+ const nm=nname(name);
+ if(c.length===5){const n=dec(c);if(n<0)return null;
+  const sc=(Math.floor(n/262144)^(h32(SALT+'|'+nm)&127))&127;
+  if((h32(SALT+'#'+nm+'#'+sc)&262143)!==n%262144)return null;return {score:sc,old:true}}
+ if(c.length===15){const x=c.slice(0,9),sig=c.slice(9,14);
+  if(enc(h32(x+sig)%32,1)!==c[14])return null;
+  const key=h32(SALT+'|'+nm);let raw='';
+  for(let i=0;i<9;i++){const v=AL.indexOf(x[i]);if(v<0)return null;raw+=AL[(v-((key>>>(i*3))&31)+64)%32]}
+  if(enc(h32(SALT+'#'+nm+'#'+raw)%33554432,5)!==sig)return null;
+  return {score:dec(raw.slice(0,2)),old:true}}
+ return null}
 let CODE='';
 
 /* --- учёт выходов со страницы --- */
@@ -942,6 +956,7 @@ sec(`<div id="fin"><div class="who" id="fwho"></div>
      '<div class="crit" id="'+W.id+'c'+j+'">'+esc(c.n)+'</div>').join('')+'</div>'});
 
  do{ord=shuf(ORDER.map((v,i)=>i))}while(ord.every((v,i)=>v===i));draw10();
+ window.addEventListener('hashchange',()=>{if(location.hash==='#check'||document.getElementById('chk'))location.reload()});
  if(location.hash==='#check'){tstop=function(){};startCheck();return}
  show();
 })();
@@ -952,11 +967,11 @@ function startCheck(){
  M.innerHTML='<section class="on" id="chk"><h2>Проверка кода</h2>'+
   '<p class="sub">Введите фамилию и имя точно так, как студент написал их в начале работы, и код с итогового экрана.</p>'+
   '<label>Фамилия, имя</label><input type="text" id="cn" autocomplete="off">'+
-  '<label>Код</label><input type="text" id="cc" autocomplete="off" autocapitalize="characters" placeholder="XXXXX" maxlength="7">'+
-  '<div class="nav"><button id="cb">Проверить</button></div><div id="cr"></div></section>';
- el('cb').onclick=()=>{const r=readCode(el('cn').value,el('cc').value),o=el('cr');
+  '<label>Код</label><input type="text" id="cc" autocomplete="off" autocapitalize="characters" placeholder="XXXXX">'+
+  '<div class="nav"><button id="cb">Проверить</button></div><p class="sub" style="margin-top:12px">Имя проверяется без учёта регистра и лишних пробелов, но порядок слов и опечатки важны: «Иванов Иван» и «Иван Иванов» — разные имена.</p><div id="cr"></div></section>';
+ el('cb').onclick=()=>{const r=readCode(el('cn').value,el('cc').value)||readCodeOld(el('cn').value,el('cc').value),o=el('cr');
   if(!r||r.score>MAXSUM){o.className='res bad';o.innerHTML='Код не подходит к этому имени. Он подделан, введён с ошибкой или имя написано иначе, чем в работе.';return}
   const g=grade(r.score/MAXSUM);
-  o.className='res ok';o.innerHTML='Код настоящий.<br>Баллы: <b>'+r.score+' из '+MAXSUM+'</b><br>Оценка: <b>'+g+'</b><br>Выходы со страницы: <b>'+(r.leaves>=7?'7 и более':r.leaves)+'</b>'+(r.leaves>0?' — студент переключался в другие приложения или вкладки':'')}}
+  o.className='res ok';o.innerHTML='Код настоящий.<br>Баллы: <b>'+r.score+' из '+MAXSUM+'</b><br>Оценка: <b>'+g+'</b><br>'+(r.old?'Код из прежней версии страницы — выходы со страницы в нём не записаны.':'Выходы со страницы: <b>'+(r.leaves>=7?'7 и более':r.leaves)+'</b>'+(r.leaves>0?' — студент переключался в другие приложения или вкладки':''))}}
 </script>
 </body></html>
