@@ -69,12 +69,10 @@ button{font-family:inherit;font-size:16px;color:#000;background:var(--yel);
  box-shadow:inset -4px -4px 0 rgba(0,0,0,.35),inset 4px 4px 0 rgba(255,255,255,.55),4px 4px 0 rgba(0,0,0,.5);
  padding:10px 16px;cursor:pointer;text-transform:uppercase;
  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
-button:hover{background:#ffe25c}
 button:active{transform:translate(4px,4px);box-shadow:inset -4px -4px 0 rgba(0,0,0,.35),inset 4px 4px 0 rgba(255,255,255,.55)}
 button:disabled{background:#4a4f78;color:#9aa0c0;cursor:default;
  box-shadow:inset -4px -4px 0 rgba(0,0,0,.35),inset 4px 4px 0 rgba(255,255,255,.12)}
 button.ghost{background:#2f7bff;color:#fff}
-button.ghost:hover{background:#5a9aff}
 button.ghost:disabled{background:#4a4f78;color:#9aa0c0}
 .nav{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:20px;
  border-top:var(--b) solid #000;padding-top:16px}
@@ -89,14 +87,12 @@ button.ghost:disabled{background:#4a4f78;color:#9aa0c0}
  box-shadow:inset -3px -3px 0 rgba(0,0,0,.28),inset 3px 3px 0 #fff;
  padding:8px 10px;font-size:16px;cursor:pointer;max-width:100%;
  -webkit-tap-highlight-color:transparent}
-.chip:hover{background:#fff}
 .chip.sel{background:var(--yel);transform:translate(-2px,-2px);box-shadow:inset -3px -3px 0 rgba(0,0,0,.28),inset 3px 3px 0 #fff,4px 4px 0 #000}
 .chip.ok{background:var(--grn);color:#000}
 .chip.bad{background:var(--red);color:#fff;box-shadow:inset -3px -3px 0 rgba(0,0,0,.35),inset 3px 3px 0 rgba(255,255,255,.3)}
 .bins{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
 .bin{background:#0d0a2e;border:var(--b) solid #fff;outline:var(--b) solid #000;
  padding:12px;min-height:130px;cursor:pointer}
-.bin:hover{background:#15104a}
 .bin h3{font-size:16px;color:var(--yel);text-transform:uppercase;margin-bottom:10px;
  text-shadow:2px 2px 0 #000;border-bottom:var(--b) solid #000;padding-bottom:8px}
 .bin .items{display:flex;flex-direction:column;gap:8px}
@@ -108,7 +104,6 @@ button.ghost:disabled{background:#4a4f78;color:#9aa0c0}
  box-shadow:inset -3px -3px 0 rgba(0,0,0,.28),inset 3px 3px 0 #fff;
  padding:10px;margin-bottom:10px;cursor:pointer;position:relative;
  -webkit-tap-highlight-color:transparent}
-.mi:hover{background:#fff}
 .mi.sel{background:var(--yel)}
 .mi.linked{background:#bcd4ff}
 .mi.linked::after{content:attr(data-pair);position:absolute;top:-4px;right:-4px;
@@ -124,7 +119,6 @@ button.ghost:disabled{background:#4a4f78;color:#9aa0c0}
 .opt{background:#e8e8f4;color:#000;border:var(--b) solid #000;
  box-shadow:inset -3px -3px 0 rgba(0,0,0,.28),inset 3px 3px 0 #fff;
  padding:10px;cursor:pointer;font-size:16px;-webkit-tap-highlight-color:transparent}
-.opt:hover{background:#fff}
 .opt.sel{background:var(--yel)}
 .opt.ok{background:var(--grn);color:#000}
 .opt.bad{background:var(--red);color:#fff}
@@ -141,7 +135,6 @@ button.ghost:disabled{background:#4a4f78;color:#9aa0c0}
  padding:10px;text-align:center;cursor:pointer;text-transform:uppercase;
  min-height:46px;display:flex;align-items:center;justify-content:center;
  -webkit-tap-highlight-color:transparent}
-.tf .tb:hover{background:#fff}
 .tf .tb.sel{background:var(--yel)}
 .tf .tb.ok{background:var(--grn);color:#000}
 .tf .tb.bad{background:var(--red);color:#fff}
@@ -156,7 +149,6 @@ button.ghost:disabled{background:#4a4f78;color:#9aa0c0}
  box-shadow:inset -3px -3px 0 rgba(0,0,0,.28),inset 3px 3px 0 #fff;
  padding:10px;text-align:center;cursor:pointer;min-height:46px;
  display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
-.odd .w:hover{background:#fff}
 .odd .w.sel{background:var(--yel)}
 .odd .w.ok{background:var(--grn);color:#000}
 .odd .w.bad{background:var(--red);color:#fff}
@@ -207,6 +199,32 @@ textarea{min-height:190px;resize:vertical;line-height:1.6}
 #chk .res.ok{background:#12421c}#chk .res.bad{background:#3a0f0f}
 #chk label{display:block;margin:12px 0 6px;color:var(--sky)}
 
+/* ====== НАВЕДЕНИЕ: только мышь ====== */
+@media (hover:hover) and (pointer:fine){
+ button:not(:disabled):hover{background:#ffe25c}
+ button.ghost:not(:disabled):hover{background:#5a9aff}
+ .chip:not(.sel):not(.ok):not(.bad):hover,.mi:not(.sel):not(.linked):not(.ok):not(.bad):hover,
+ .opt:not(.sel):not(.ok):not(.bad):hover,.tf .tb:not(.sel):not(.ok):not(.bad):hover,
+ .odd .w:not(.sel):not(.ok):not(.bad):hover{background:#fff}
+ .bin:hover{background:#15104a}
+}
+/* ====== КАСАНИЯ ====== */
+.chip,.opt,.mi,.bin,.tf .tb,.odd .w,.oi button,select{touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+ -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button:disabled{pointer-events:none}
+@media (hover:none){
+ button:active{transform:none}
+ #toast.show{animation:none}
+ body.shake main{animation:none}
+ #fx.bad{animation:fxsoft .45s ease-out 1} #fx.ok{animation:fxsoftg .45s ease-out 1}
+}
+@keyframes fxsoft{0%{background:#e82d2d;opacity:.35}100%{opacity:0}}
+@keyframes fxsoftg{0%{background:#3ad14a;opacity:.3}100%{opacity:0}}
+html,body{overflow-x:hidden}
+@media (prefers-reduced-motion:reduce){
+ body.shake main{animation:none} #toast.show{animation:none} #tm.crit{animation:none}
+}
+
 /* ====== ЭФФЕКТЫ ====== */
 #fx{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:0}
 #fx.bad{animation:fxbad .5s steps(1,end) 1}
@@ -224,12 +242,6 @@ body.shake main{animation:sh .35s steps(1,end) 2}
 #toast.bad{background:#b31414;color:#fff}
 @keyframes jit{0%{transform:translate(-50%,-50%)}50%{transform:translate(calc(-50% + 4px),calc(-50% - 4px))}100%{transform:translate(-50%,-50%)}}
 
-@media (hover:none){
- .chip:hover,.opt:hover,.mi:hover,.bin:hover,button:hover,.tf .tb:hover,.odd .w:hover{background:inherit}
- .chip:hover,.opt:hover,.mi:hover,.tf .tb:hover,.odd .w:hover{background:#e8e8f4}
- button:hover{background:var(--yel)}
- button.ghost:hover{background:var(--blue)}
- .bin:hover{background:#0d0a2e}
 }
 
 @media (max-width:860px){
