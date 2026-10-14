@@ -200,9 +200,9 @@ textarea{min-height:190px;resize:vertical;line-height:1.6}
 #fin td{padding:8px 10px;border:var(--b) solid #000;background:#0d0a2e;text-align:left}
 #fin td:last-child{text-align:right;color:var(--yel);white-space:nowrap}
 
-#fin .code{display:inline-block;font-size:28px;letter-spacing:2px;background:#000;color:var(--grn);
+#fin .code{display:inline-block;font-size:40px;letter-spacing:8px;background:#000;color:var(--grn);
  border:var(--b) solid #fff;outline:var(--b) solid #000;padding:10px 16px;margin:4px 0 6px;user-select:all;word-break:break-all}
-@media (max-width:860px){#fin .code{font-size:20px;letter-spacing:1px}}
+@media (max-width:860px){#fin .code{font-size:32px;letter-spacing:6px}}
 #chk .res{margin-top:16px;font-size:16px;padding:12px;border:var(--b) solid #000;line-height:1.7}
 #chk .res.ok{background:#12421c}#chk .res.bad{background:#3a0f0f}
 #chk label{display:block;margin:12px 0 6px;color:var(--sky)}
@@ -706,24 +706,15 @@ function h32(t){let h=2166136261>>>0;for(let i=0;i<t.length;i++){h^=t.charCodeAt
 function nname(t){return norm(t).replace(/\s+/g,' ')}
 function enc(n,len){let r='';for(let i=0;i<len;i++){r=AL[n%32]+r;n=Math.floor(n/32)}return r}
 function dec(t){let n=0;for(const c of t){const v=AL.indexOf(c);if(v<0)return -1;n=n*32+v}return n}
-const EPOCH=Date.UTC(2026,0,1);
 function mkCode(name,sc){
- const m=Math.floor((Date.now()-EPOCH)/60000), r=Math.floor(Math.random()*1024);
- const raw=enc(sc,2)+enc(m,5)+enc(r,2);
- const key=h32(SALT+'|'+nname(name));let x='';
- for(let i=0;i<raw.length;i++)x+=AL[(AL.indexOf(raw[i])+((key>>>(i*3))&31))%32];
- const sig=enc(h32(SALT+'#'+nname(name)+'#'+raw)%33554432,5);
- const c=x+sig+enc(h32(x+sig)%32,1);
- return c.slice(0,5)+'-'+c.slice(5,10)+'-'+c.slice(10,15)}
+ const nm=nname(name),mask=h32(SALT+'|'+nm)&127,mac=h32(SALT+'#'+nm+'#'+sc)&262143;
+ return enc(((sc^mask)&127)*262144+mac,5)}
 function readCode(name,code){
  const c=String(code).toUpperCase().replace(/[^0-9A-Z]/g,'').replace(/O/g,'0').replace(/I/g,'1');
- if(c.length!==15)return null;
- const x=c.slice(0,9),sig=c.slice(9,14);
- if(enc(h32(x+sig)%32,1)!==c[14])return null;
- const key=h32(SALT+'|'+nname(name));let raw='';
- for(let i=0;i<9;i++){const v=AL.indexOf(x[i]);if(v<0)return null;raw+=AL[(v-((key>>>(i*3))&31)+64)%32]}
- if(enc(h32(SALT+'#'+nname(name)+'#'+raw)%33554432,5)!==sig)return null;
- return {score:dec(raw.slice(0,2)),time:new Date(EPOCH+dec(raw.slice(2,7))*60000)}}
+ if(c.length!==5)return null;const n=dec(c);if(n<0)return null;
+ const nm=nname(name),sc=(Math.floor(n/262144)^(h32(SALT+'|'+nm)&127))&127;
+ if((h32(SALT+'#'+nm+'#'+sc)&262143)!==n%262144)return null;
+ return {score:sc}}
 let CODE='';
 
 /* --- итог --- */
@@ -905,12 +896,11 @@ function startCheck(){
  M.innerHTML='<section class="on" id="chk"><h2>Проверка кода</h2>'+
   '<p class="sub">Введите фамилию и имя точно так, как студент написал их в начале работы, и код с итогового экрана.</p>'+
   '<label>Фамилия, имя</label><input type="text" id="cn" autocomplete="off">'+
-  '<label>Код</label><input type="text" id="cc" autocomplete="off" autocapitalize="characters" placeholder="XXXXX-XXXXX-XXXXX">'+
+  '<label>Код</label><input type="text" id="cc" autocomplete="off" autocapitalize="characters" placeholder="XXXXX" maxlength="7">'+
   '<div class="nav"><button id="cb">Проверить</button></div><div id="cr"></div></section>';
  el('cb').onclick=()=>{const r=readCode(el('cn').value,el('cc').value),o=el('cr');
   if(!r||r.score>MAXSUM){o.className='res bad';o.innerHTML='Код не подходит к этому имени. Он подделан, введён с ошибкой или имя написано иначе, чем в работе.';return}
   const g=grade(r.score/MAXSUM);
-  o.className='res ok';o.innerHTML='Код настоящий.<br>Баллы: <b>'+r.score+' из '+MAXSUM+'</b><br>Оценка: <b>'+g+'</b><br>Работа завершена: '+
-   r.time.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}}
+  o.className='res ok';o.innerHTML='Код настоящий.<br>Баллы: <b>'+r.score+' из '+MAXSUM+'</b><br>Оценка: <b>'+g+'</b>'}}
 </script>
 </body></html>
