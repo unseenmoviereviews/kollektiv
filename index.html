@@ -186,7 +186,7 @@ input[type=text],textarea{font-family:inherit;font-size:16px;width:100%;
  background:#0d0a2e;color:#fff;border:var(--b) solid #fff;outline:var(--b) solid #000;
  padding:10px;border-radius:0}
 input[type=text]:focus,textarea:focus{border-color:var(--yel);outline-color:#000}
-textarea{min-height:120px;resize:vertical;line-height:1.6}
+textarea{min-height:190px;resize:vertical;line-height:1.6}
 .start p{font-size:16px;margin-bottom:12px;line-height:1.7}
 
 /* ====== ИТОГ ====== */
@@ -199,6 +199,13 @@ textarea{min-height:120px;resize:vertical;line-height:1.6}
 #fin table{margin:20px auto 0;border-collapse:collapse;font-size:16px;width:100%;max-width:560px}
 #fin td{padding:8px 10px;border:var(--b) solid #000;background:#0d0a2e;text-align:left}
 #fin td:last-child{text-align:right;color:var(--yel);white-space:nowrap}
+
+#fin .code{display:inline-block;font-size:28px;letter-spacing:2px;background:#000;color:var(--grn);
+ border:var(--b) solid #fff;outline:var(--b) solid #000;padding:10px 16px;margin:4px 0 6px;user-select:all;word-break:break-all}
+@media (max-width:860px){#fin .code{font-size:20px;letter-spacing:1px}}
+#chk .res{margin-top:16px;font-size:16px;padding:12px;border:var(--b) solid #000;line-height:1.7}
+#chk .res.ok{background:#12421c}#chk .res.bad{background:#3a0f0f}
+#chk label{display:block;margin:12px 0 6px;color:var(--sky)}
 
 /* ====== ЭФФЕКТЫ ====== */
 #fx{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:0}
@@ -250,12 +257,35 @@ body.shake main{animation:sh .35s steps(1,end) 2}
  .grade{font-size:80px;text-shadow:5px 5px 0 #000}
  .oi .t{line-height:1.4}
 }
+
+/* ====== ВПИШИ ТЕРМИН ====== */
+.term{background:#0d0a2e;border:var(--b) solid #000;padding:12px;margin-bottom:12px}
+.term .d{font-size:16px;line-height:1.6;margin-bottom:10px}
+.term input[type=text]{width:100%}
+.term input.ok{border-color:var(--grn);background:#06250d;color:#fff}
+.term input.bad{border-color:var(--red);background:#2b0707;color:#fff}
+.term .ans{display:none;font-size:16px;margin-top:8px;text-transform:uppercase}
+.term .ans.ok{display:block;color:var(--grn)}
+.term .ans.bad{display:block;color:var(--yel)}
+
+/* ====== ПИСЬМЕННЫЕ ОТВЕТЫ ====== */
+.hint{font-size:16px;color:var(--sky);margin:0 0 10px;line-height:1.6}
+.warn{display:none;font-size:16px;color:#fff;background:#b31414;border:var(--b) solid #000;
+ padding:8px 10px;margin-top:10px}
+.warn.show{display:block}
+.crits{display:none;margin-top:12px;flex-direction:column;gap:8px}
+.crits.show{display:flex}
+.crit{font-size:16px;padding:8px 10px;border:var(--b) solid #000;background:#0d0a2e;color:var(--mut)}
+.crit.ok{background:#12421c;color:#fff}
+.crit.ok::before{content:"+ ";color:var(--grn)}
+.crit.bad{background:#3a0f0f;color:#fff}
+.crit.bad::before{content:"- ";color:var(--red)}
 </style></head><body>
 
 <header><div class="hw">
  <div class="nm" id="hname">Общение и роли в трудовом коллективе<small>Тема 1.5</small></div>
  <div class="badge" id="tm">—</div>
- <div class="badge">Блок <b id="bn">0</b>/10</div>
+ <div class="badge">Блок <b id="bn">0</b>/13</div>
  <div class="badge">Баллы <b id="sc">0</b></div>
 </div><div class="bar"><i id="pb" style="width:0"></i></div></header>
 
@@ -272,14 +302,17 @@ const CARDS=[
  {t:'Запись в журнале о передаче смены',k:'k'},
  {t:'Объявление о переносе планёрки в рабочем чате',k:'k'},
  {t:'Напарник словами подбадривает перед сложной работой',k:'k'},
+ {t:'Сменное задание распечатано и выдано бригаде',k:'k'},
  {t:'Бригада делит участки: кто какую часть работы берёт',k:'i'},
  {t:'Двое несут деталь, подстраиваясь под шаг друг друга',k:'i'},
  {t:'Коллеги договариваются поменяться сменами',k:'i'},
  {t:'Рабочие расступаются, пропуская погрузчик, без единого слова',k:'i'},
+ {t:'Двое держат лист, пока третий размечает',k:'i'},
  {t:'По лицу видно, что напарник переживает из-за ошибки',k:'p'},
  {t:'После первого разговора решаешь, что новичок самоуверен',k:'p'},
  {t:'Понимаешь по тону, что просьба на деле требование',k:'p'},
- {t:'По молчанию в бригаде понимаешь, что вчерашняя ссора не забыта',k:'p'}];
+ {t:'По молчанию в бригаде понимаешь, что вчерашняя ссора не забыта',k:'p'},
+ {t:'По паузе в ответе чувствуешь, что собеседник не согласен',k:'p'}];
 
 const PAIRS=[
  ['Новичок','Задавать вопросы, а не делать вид, что всё понял'],
@@ -289,16 +322,19 @@ const PAIRS=[
  ['Работник, который всегда спорит','Замечать слабые места в принятых решениях'],
  ['Ветеран производства','Хранить и передавать традиции коллектива'],
  ['Специалист узкого профиля','Отвечать за участок, где другие не разбираются'],
- ['Представитель бригады на переговорах','Доносить до руководства общую позицию, а не свою']];
+ ['Представитель бригады на переговорах','Доносить до руководства общую позицию, а не свою'],
+ ['Ответственный за охрану труда','Останавливать работу, даже если это срывает срок'],
+ ['Сменщик','Сдавать участок в том виде, в каком принял бы его сам']];
 
 const SBINS=[{k:'a',t:'Предписанный<br><span style="font-weight:400;color:#9fb0d4">получен независимо от воли</span>'},
  {k:'b',t:'Достигаемый<br><span style="font-weight:400;color:#9fb0d4">приобретён усилиями</span>'}];
 const SCARDS=[
  {t:'Сын',k:'a'},{t:'Подросток',k:'a'},{t:'Мужчина',k:'a'},{t:'Уроженец города',k:'a'},{t:'Внук',k:'a'},
  {t:'Бригадир',k:'b'},{t:'Мастер спорта',k:'b'},{t:'Водитель категории C',k:'b'},
- {t:'Студент колледжа',k:'b'},{t:'Лучший работник месяца',k:'b'}];
+ {t:'Студент колледжа',k:'b'},{t:'Лучший работник месяца',k:'b'},
+ {t:'Пожилой человек',k:'a'},{t:'Наставник новичков',k:'b'}];
 
-const TF=[
+const _TF=[
  {q:'Социальный статус и социальная роль — одно и то же.',a:false,
   w:'Статус — позиция в обществе, роль — ожидаемое поведение в этой позиции. Статус занимают, роль исполняют.'},
  {q:'У одного человека одновременно бывает несколько статусов.',a:true,
@@ -318,9 +354,17 @@ const TF=[
  {q:'Молчаливое «всё понял» без уточнений — нарушение обратной связи.',a:true,
   w:'Обратная связь обязательна: не уточнив непонятое, работник действует наугад, и цена ошибки растёт.'},
  {q:'В конфликте всегда следует идти на компромисс.',a:false,
-  w:'Компромисс уместен при равных силах и нехватке времени. В вопросах безопасности он недопустим.'}];
+  w:'Компромисс уместен при равных силах и нехватке времени. В вопросах безопасности он недопустим.'},
+ {q:'Социальный статус и престиж профессии — одно и то же.',a:false,
+  w:'Статус — позиция конкретного человека, престиж — оценка обществом профессии в целом.'},
+ {q:'Формальная структура коллектива закреплена документами.',a:true,
+  w:'Штатное расписание, должностные инструкции, приказы — это и есть формальная структура.'},
+ {q:'Одну и ту же роль разные люди исполняют одинаково.',a:false,
+  w:'Роль задаёт рамку ожиданий, но внутри неё остаётся место для характера и стиля человека.'},
+ {q:'Конфликт в коллективе всегда вреден.',a:false,
+  w:'Вскрытый конфликт показывает реальную проблему. Вредна не сама разность позиций, а способ её вести.'}];
 
-const Q3=[
+const _Q3=[
  {c:'Напарник работает без защитных средств и говорит, что «так делают все».',
   o:['Соперничество: жёстко настоять на своём','Приспособление: промолчать, чтобы не ссориться','Избегание: сделать вид, что не заметил','Компромисс: договориться о половинчатой мере'],a:0,
   w:'Там, где речь о безопасности, уступка и компромисс недопустимы: цена ошибки — здоровье и жизнь.'},
@@ -344,9 +388,15 @@ const Q3=[
   w:'Правила безопасности не делятся пополам. Отказ обосновывают последствиями — этим он отличается от упрямства.'},
  {c:'Новичок занял ваше привычное место в раздевалке. Мелочь, но слегка раздражает.',
   o:['Соперничество: потребовать освободить','Приспособление: занять другое и не делать из этого события','Избегание: затаить обиду','Сотрудничество: собрать бригаду и обсудить'],a:1,
-  w:'Реакция не должна быть больше повода. Собрание из-за места так же неуместно, как требование уступки.'}];
+  w:'Реакция не должна быть больше повода. Собрание из-за места так же неуместно, как требование уступки.'},
+ {c:'Напарник третий раз опаздывает, из-за чего смена начинается позже. Разговор наедине ничего не дал.',
+  o:['Избегание: больше не поднимать тему','Соперничество: вынести вопрос к мастеру и настоять на мерах','Приспособление: начинать смену за него','Компромисс: опаздывать по очереди'],a:1,
+  w:'Когда мягкие способы исчерпаны, а нарушение повторяется и бьёт по работе, твёрдая позиция оправдана.'},
+ {c:'Два отдела спорят, кто виноват в простое. У вас есть данные, которые показывают общую причину.',
+  o:['Соперничество: доказать правоту своего отдела','Сотрудничество: вынести данные и обсудить общую причину','Избегание: не лезть в чужой спор','Приспособление: согласиться с более сильным отделом'],a:1,
+  w:'Факты переводят спор из плоскости «кто виноват» в плоскость «что менять». Это и есть сотрудничество.'}];
 
-const ODD=[
+const _ODD=[
  {lab:'Агенты первичной социализации', w:['Семья','Школа','Сверстники','Бригада на производстве'], a:3,
   x:'Семья, школа и сверстники — агенты первичной социализации, бригада на производстве — вторичной.'},
  {lab:'Положительные санкции', w:['Похвала','Премия','Грамота','Выговор'], a:3,
@@ -356,15 +406,21 @@ const ODD=[
  {lab:'Стороны общения', w:['Коммуникативная','Интерактивная','Перцептивная','Нормативная'], a:3,
   x:'Выделяют три стороны общения: коммуникативную, интерактивную и перцептивную. Нормативной среди них нет.'},
  {lab:'Факторы престижа профессии', w:['Квалификация','Общественная польза','Условия труда','Длина названия должности'], a:3,
-  x:'Название должности на престиж не влияет, остальные три — влияют.'}];
+  x:'Название должности на престиж не влияет, остальные три — влияют.'},
+ {lab:'Формы делового общения', w:['Деловая беседа','Переговоры','Планёрка','Сплетня'], a:3,
+  x:'Сплетня — неформальный обмен слухами, деловой формой общения она не является.'},
+ {lab:'Отрицательные санкции', w:['Выговор','Штраф','Увольнение','Премия'], a:3,
+  x:'Премия — положительная санкция, остальные три наказывают.'}];
 
 const Q4=[{t:'Общественная польза профессии',ok:true},{t:'Требуемая квалификация и длительность подготовки',ok:true},
  {t:'Уровень дохода',ok:true},{t:'Условия труда и их тяжесть',ok:true},
  {t:'Самостоятельность в принятии решений',ok:true},{t:'Публичное признание и уважение в обществе',ok:true},
+ {t:'Ответственность и цена ошибки в работе',ok:true},{t:'Возможность профессионального роста',ok:true},
  {t:'Цвет форменной одежды',ok:false},{t:'Длина названия должности',ok:false},
+ {t:'Расположение рабочего места относительно входа',ok:false},
  {t:'Количество людей, занятых в профессии',ok:false}];
 
-const Q5=[
+const _Q5=[
  {c:'Сообщение руководителю в 23:40: «Слушай, я завтра не приду, дела».',
   o:['Нарушены деловой стиль и обращение, не указана причина, нет своевременности','Сообщение слишком длинное','Ошибка только в том, что отправлено ночью'],a:0,
   w:'В деловом общении нужны обращение, уважительный тон, конкретная причина и своевременность.'},
@@ -385,7 +441,13 @@ const Q5=[
   w:'Когда официальный канал не работает, его место занимают слухи, а доверие к руководителю падает.'},
  {c:'Новичок с первого дня обращается к пожилому мастеру на «ты» и по прозвищу.',
   o:['Нарушена дистанция: форму обращения в коллективе задаёт не новичок','Нарушений нет, все свои','Нужно было обращаться по фамилии'],a:0,
-  w:'Степень неформальности определяет тот, кто старше по положению или стажу.'}];
+  w:'Степень неформальности определяет тот, кто старше по положению или стажу.'},
+ {c:'На планёрке мастер говорит двадцать минут и ни разу не спрашивает, есть ли вопросы.',
+  o:['Всё верно: планёрка — это доведение информации','Общение превращено в одностороннее: нет обратной связи','Планёрка была слишком короткой'],a:1,
+  w:'Без обратной связи руководитель не знает, что из сказанного дошло, и узнаёт об этом только по ошибкам.'},
+ {c:'Работнику поручили задачу словами «ну ты там сам разберись, по ходу поймёшь».',
+  o:['Задача поставлена неконкретно: нет результата, срока и критериев','Нарушений нет, это доверие к работнику','Нужно было поручить задачу другому'],a:0,
+  w:'Поручение без результата, срока и критериев — это не доверие, а перекладывание ответственности за неясность.'}];
 
 const GAPS=[
  {pre:'Позиция человека в обществе, связанная с определёнными правами и обязанностями, — это ',a:'социальный статус'},
@@ -396,21 +458,63 @@ const GAPS=[
  {pre:'. Оценка обществом значимости профессии — это ',a:'престиж'},
  {pre:'. Реакция окружающих на поведение человека, поощряющая или осуждающая его, — ',a:'санкция'},
  {pre:'. Вхождение человека в профессиональное сообщество относится к ',a:'вторичной социализации'},
+ {pre:'. Негласные правила, которые складываются в коллективе сами собой, — это ',a:'нормы'},
+ {pre:'. Человек, влияющий на коллектив без должности, — это ',a:'неформальный лидер'},
  {pre:'.',a:null}];
-const GOPTS=['социальный статус','социальная роль','ролевой конфликт','формальная','неформальная','престиж','санкция','вторичной социализации'];
+const GOPTS=['социальный статус','социальная роль','ролевой конфликт','формальная','неформальная','престиж','санкция','вторичной социализации','нормы','неформальный лидер'];
 
-const ORDER=['Признать, что проблема есть, и назвать её прямо',
+const ORDER=['Остановиться и не отвечать сразу, на эмоциях',
+ 'Признать, что проблема есть, и назвать её прямо',
+ 'Выслушать вторую сторону до конца, не перебивая',
  'Выяснить, чего на самом деле хочет каждая сторона',
  'Предложить несколько вариантов решения',
  'Выбрать вариант, который устраивает обе стороны',
  'Договориться, кто что делает и к какому сроку',
  'Через время проверить, работает ли решение'];
 
+
+/* --- блок 11: впиши термин (проверка по основам слов) --- */
+const _TERMS=[
+ {d:'Позиция человека в обществе, связанная с правами и обязанностями',k:[['социальн'],['статус']],a:'социальный статус'},
+ {d:'Ожидаемое поведение человека, связанное с его положением',k:[['социальн'],['рол']],a:'социальная роль'},
+ {d:'Статус, который человек получает независимо от своих усилий',k:[['предписа']],a:'предписанный статус'},
+ {d:'Оценка обществом значимости той или иной профессии',k:[['престиж']],a:'престиж'},
+ {d:'Реакция окружающих на поведение человека: поощрение или осуждение',k:[['санкц']],a:'санкция'},
+ {d:'Усвоение человеком норм, опыта и правил общества',k:[['социализац']],a:'социализация'},
+ {d:'Столкновение требований двух ролей одного человека',k:[['рол'],['конфликт']],a:'ролевой конфликт'},
+ {d:'Структура коллектива, которая складывается сама и не закреплена документами',k:[['неформальн']],a:'неформальная структура'}];
+
+/* --- блоки 12-13: письменные задания, проверка по ключевым словам --- */
+const WRITE=[
+ {id:'w1',min:70,
+  task:'Напишите сообщение мастеру Сергею Петровичу о том, что завтра вы не сможете выйти на смену по болезни. Соблюдите правила делового общения.',
+  hint:'Проверяется: обращение, причина, срок, что вы предпринимаете, вежливая форма.',
+  c:[{n:'Обращение к адресату',w:['сергей','уважаем','здравствуй','добрый день','доброе утро','добрый вечер']},
+     {n:'Названа причина',w:['болен','больна','заболе','температур','больничн','врач','недомог','плохо себя','простуд']},
+     {n:'Указан срок',w:['завтра','смен','сегодня','числ','понедельник','вторник','сред','четверг','пятниц','дня','дней','недел']},
+     {n:'Сказано, что вы предпринимаете',w:['замен','подмен','предупред','сообщ','справк','больничн','выйду','позвон','принесу','уведом']},
+     {n:'Вежливая форма',w:['пожалуйста','прошу','извин','спасибо','благодар','прощен','заранее']}]},
+ {id:'w2',min:120,
+  task:'Новичок на второй неделе получил задание, половину не понял, но переспросить постеснялся. Сделал наугад и испортил заготовку. Мастер при всей бригаде назвал его бестолковым. Напишите, что нарушили обе стороны и как следовало поступить каждому.',
+  hint:'Проверяется: обратная связь, публичность критики, критика действия, роль наставника, последствия для коллектива.',
+  c:[{n:'Названо нарушение обратной связи',w:['обратн','уточн','переспрос','спросить','спросил','вопрос','не понял','выяснит']},
+     {n:'Отмечена публичность критики',w:['публичн','при всей','при всех','при бригад','наедине','один на один','принарод','не при']},
+     {n:'Критика действия, а не личности',w:['личност','личность','оскорб','унизи','ярлык','бестолков','переход на личн','работ','ошибк']},
+     {n:'Названа роль мастера или наставника',w:['настав','мастер','опытн','объясн','научи','показа','проконтрол','убедит']},
+     {n:'Названы последствия или что делать дальше',w:['довери','страх','боит','побоит','молч','повтор','исправ','разобрат','впредь','научит','скрыва']}]}];
+
 /* ===================== ДВИЖОК ===================== */
+function shuf(a){const r=a.slice();for(let i=r.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[r[i],r[j]]=[r[j],r[i]]}return r}
+function shufQ(arr){return shuf(arr).map(q=>{const ix=shuf(q.o.map((_,i)=>i));
+ return Object.assign({},q,{o:ix.map(i=>q.o[i]),a:ix.indexOf(q.a)})})}
+const TF=shuf(_TF), Q3=shufQ(_Q3), Q5=shufQ(_Q5), ODD=shuf(_ODD), TERMS=shuf(_TERMS);
+
 const BLOCKS=[{id:'start',t:0},
- {id:'b1',t:5*60,max:12},{id:'b2',t:5*60,max:8},{id:'b3',t:5*60,max:10},{id:'b4',t:6*60,max:10},
- {id:'b5',t:8*60,max:8},{id:'b6',t:4*60,max:5},{id:'b7',t:4*60,max:6},{id:'b8',t:7*60,max:7},
- {id:'b9',t:5*60,max:8},{id:'b10',t:4*60,max:6},{id:'fin',t:0}];
+ {id:'b1',t:5*60,max:15},{id:'b2',t:4*60,max:10},{id:'b3',t:4*60,max:12},{id:'b4',t:6*60,max:14},
+ {id:'b5',t:7*60,max:10},{id:'b6',t:4*60,max:7},{id:'b7',t:3*60,max:8},{id:'b8',t:6*60,max:9},
+ {id:'b9',t:5*60,max:10},{id:'b10',t:4*60,max:8},{id:'b11',t:5*60,max:8},{id:'b12',t:4*60,max:5},
+ {id:'b13',t:5*60,max:5},{id:'fin',t:0}];
+(function(){const mid=shuf(BLOCKS.slice(1,-1));BLOCKS.splice(1,mid.length,...mid)})();
 const MAXSUM=BLOCKS.reduce((s,b)=>s+(b.max||0),0);
 let cur=0,score=0,res={},T={left:0,h:null};
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
@@ -424,10 +528,10 @@ function tstart(sec){tstop();if(!sec){el('tm').textContent='—';el('tm').classN
   if(T.left<=0){tstop();fx(false,'ВРЕМЯ ВЫШЛО');autocheck()}},1000)}
 function tstop(){if(T.h)clearInterval(T.h);T.h=null}
 function autocheck(){const b=BLOCKS[cur].id;const f={b1:check1,b2:check2,b3:check3,b4:check4,b5:check5,
- b6:check6,b7:check7,b8:check8,b9:check9,b10:check10}[b];if(f)f()}
+ b6:check6,b7:check7,b8:check8,b9:check9,b10:check10,b11:check11,b12:check12,b13:check13}[b];if(f)f()}
 function show(){const t=el('toast');if(t){t.classList.remove('show');clearTimeout(t._h)}
  document.querySelectorAll('section').forEach((s,i)=>s.classList.toggle('on',i===cur));
- el('bn').textContent=Math.min(Math.max(cur,0),10);
+ el('bn').textContent=Math.min(Math.max(cur,0),13);
  el('pb').style.width=(cur/(BLOCKS.length-1)*100)+'%';
  tstart(BLOCKS[cur].t);window.scrollTo({top:0});
  if(BLOCKS[cur].id==='fin')fin()}
@@ -449,7 +553,7 @@ function fx(good,txt){const f=el('fx');f.className='';void f.offsetWidth;f.class
 /* --- сортировка (универсальная) --- */
 function mkSort(poolId,binsId,cards,bins,state){
  const pool=el(poolId);
- cards.map((c,i)=>i).sort(()=>Math.random()-.5).forEach(i=>{
+ shuf(cards.map((c,i)=>i)).forEach(i=>{
   const d=document.createElement('div');d.className='chip';d.textContent=cards[i].t;d.dataset.i=i;
   d.onclick=()=>{if(state.done)return;
    if(d.parentNode.classList.contains('items')){
@@ -500,17 +604,17 @@ function checkQ(data,pre,vid,btn,nxt,label,max){let n=0;
 
 /* --- блоки --- */
 const st1={},st3={};
-function check1(){checkSort('pool1','bins1',CARDS,st1,'v1','bt1','nx1','Стороны общения',12)}
+function check1(){checkSort('pool1','bins1',CARDS,st1,'v1','bt1','nx1','Стороны общения',15)}
 let selL=null,links={},d2=false;
 function check2(){if(d2)return;d2=true;let n=0;
  document.querySelectorAll('#mL .mi').forEach(a=>{const i=+a.dataset.i,j=links[i],good=(j===i);
   a.classList.add(good?'ok':'bad');
   if(j!==undefined)document.querySelector('#mR [data-j="'+j+'"]').classList.add(good?'ok':'bad');
   if(good)n++});
- addScore(n);res['Роли и ожидания']=n+' / 8';
- el('v2').textContent='Верно: '+n+' из 8';el('v2').className='verdict '+(n>=6?'ok':'bad');
- el('bt2').disabled=true;el('nx2').disabled=false;tstop();fx(n===8)}
-function check3(){checkSort('pool3','bins3',SCARDS,st3,'v3','bt3','nx3','Виды статусов',10)}
+ addScore(n);res['Роли и ожидания']=n+' / 10';
+ el('v2').textContent='Верно: '+n+' из 10';el('v2').className='verdict '+(n>=8?'ok':'bad');
+ el('bt2').disabled=true;el('nx2').disabled=false;tstop();fx(n===10)}
+function check3(){checkSort('pool3','bins3',SCARDS,st3,'v3','bt3','nx3','Виды статусов',12)}
 let d4=false;
 function check4(){if(d4)return;d4=true;let n=0;
  TF.forEach((q,i)=>{const box=el('tf'+i),pick=box.dataset.v;
@@ -519,11 +623,11 @@ function check4(){if(d4)return;d4=true;let n=0;
   const good=(pick!==undefined&&(pick==='1')===q.a);
   box.classList.add(good?'ok':'bad');if(good)n++;
   el('wtf'+i).classList.add('show')});
- addScore(n);res['Верно или неверно']=n+' / 10';
- el('v4').textContent='Верно: '+n+' из 10';el('v4').className='verdict '+(n>=8?'ok':'bad');
- el('bt4').disabled=true;el('nx4').disabled=false;tstop();fx(n===10)}
+ addScore(n);res['Верно или неверно']=n+' / 14';
+ el('v4').textContent='Верно: '+n+' из 14';el('v4').className='verdict '+(n>=11?'ok':'bad');
+ el('bt4').disabled=true;el('nx4').disabled=false;tstop();fx(n===14)}
 let d5=false;
-function check5(){if(d5)return;d5=true;checkQ(Q3,'q5o','v5','bt5','nx5','Стратегии в конфликте',8)}
+function check5(){if(d5)return;d5=true;checkQ(Q3,'q5o','v5','bt5','nx5','Стратегии в конфликте',10)}
 let d6=false;
 function check6(){if(d6)return;d6=true;let n=0;
  ODD.forEach((r,i)=>{const box=el('od'+i);
@@ -531,25 +635,25 @@ function check6(){if(d6)return;d6=true;let n=0;
    if(j===r.a)w.classList.add('ok');else if(w.classList.contains('sel'))w.classList.add('bad')});
   const s=box.querySelector('.w.sel');if(s&&+s.dataset.j===r.a)n++;
   el('wod'+i).classList.add('show')});
- addScore(n);res['Найди лишнее']=n+' / 5';
- el('v6').textContent='Верно: '+n+' из 5';el('v6').className='verdict '+(n>=4?'ok':'bad');
- el('bt6').disabled=true;el('nx6').disabled=false;tstop();fx(n===5)}
+ addScore(n);res['Найди лишнее']=n+' / 7';
+ el('v6').textContent='Верно: '+n+' из 7';el('v6').className='verdict '+(n>=6?'ok':'bad');
+ el('bt6').disabled=true;el('nx6').disabled=false;tstop();fx(n===7)}
 let d7=false;
 function check7(){if(d7)return;d7=true;let n=0;
  document.querySelectorAll('#q7 .opt').forEach(d=>{const q=Q4[+d.dataset.i],p=d.classList.contains('sel');
   if(q.ok){d.classList.add(p?'ok':'bad');if(p)n++}else if(p){d.classList.add('bad');n--}});
- n=Math.max(0,n);addScore(n);res['Факторы престижа']=n+' / 6';
- el('v7').textContent='Набрано: '+n+' из 6';el('v7').className='verdict '+(n>=5?'ok':'bad');
- el('bt7').disabled=true;el('nx7').disabled=false;tstop();fx(n===6)}
+ n=Math.max(0,n);addScore(n);res['Факторы престижа']=n+' / 8';
+ el('v7').textContent='Набрано: '+n+' из 8';el('v7').className='verdict '+(n>=7?'ok':'bad');
+ el('bt7').disabled=true;el('nx7').disabled=false;tstop();fx(n===8)}
 let d8=false;
-function check8(){if(d8)return;d8=true;checkQ(Q5,'q8o','v8','bt8','nx8','Ошибки общения',7)}
+function check8(){if(d8)return;d8=true;checkQ(Q5,'q8o','v8','bt8','nx8','Ошибки общения',9)}
 let d9=false;
 function check9(){if(d9)return;d9=true;let n=0;
  document.querySelectorAll('#q9 select').forEach(s=>{const good=(s.value===s.dataset.a);
   s.classList.add(good?'ok':'bad');s.disabled=true;if(good)n++});
- addScore(n);res['Термины в тексте']=n+' / 8';
- el('v9').textContent='Верно: '+n+' из 8';el('v9').className='verdict '+(n>=6?'ok':'bad');
- el('bt9').disabled=true;el('nx9').disabled=false;tstop();fx(n===8)}
+ addScore(n);res['Термины в тексте']=n+' / 10';
+ el('v9').textContent='Верно: '+n+' из 10';el('v9').className='verdict '+(n>=8?'ok':'bad');
+ el('bt9').disabled=true;el('nx9').disabled=false;tstop();fx(n===10)}
 let ord=[],d10=false;
 function draw10(){const box=el('q10');box.innerHTML='';
  ord.forEach((v,i)=>{const d=document.createElement('div');d.className='oi';d.dataset.v=v;
@@ -563,9 +667,64 @@ function draw10(){const box=el('q10');box.innerHTML='';
 function check10(){if(d10)return;d10=true;let n=0;
  ord.forEach((v,i)=>{if(v===i)n++});draw10();
  document.querySelectorAll('#q10 .oi').forEach((d,i)=>d.classList.add(ord[i]===i?'ok':'bad'));
- addScore(n);res['Порядок шагов']=n+' / 6';
- el('v10').textContent='На своих местах: '+n+' из 6';el('v10').className='verdict '+(n>=5?'ok':'bad');
- el('bt10').disabled=true;el('nx10').disabled=false;tstop();fx(n===6)}
+ addScore(n);res['Порядок шагов']=n+' / 8';
+ el('v10').textContent='На своих местах: '+n+' из 8';el('v10').className='verdict '+(n>=7?'ok':'bad');
+ el('bt10').disabled=true;el('nx10').disabled=false;tstop();fx(n===8)}
+
+
+/* --- блоки с вводом текста --- */
+function norm(t){return String(t||'').toLowerCase().replace(/ё/g,'е').replace(/[^a-zа-я0-9]+/g,' ').trim()}
+let d11=false;
+function check11(){if(d11)return;d11=true;let n=0;
+ TERMS.forEach((t,i)=>{const f=el('tr'+i),v=norm(f.value);
+  const good=v.length>2&&t.k.every(g=>g.some(root=>v.indexOf(root)>=0));
+  f.classList.add(good?'ok':'bad');f.disabled=true;if(good)n++;
+  el('ta'+i).textContent=good?'верно':'ответ: '+t.a;
+  el('ta'+i).className='ans '+(good?'ok':'bad')});
+ addScore(n);res['Впиши термин']=n+' / 8';
+ el('v11').textContent='Верно: '+n+' из 8';el('v11').className='verdict '+(n>=6?'ok':'bad');
+ el('bt11').disabled=true;el('nx11').disabled=false;tstop();fx(n===8)}
+
+function checkWrite(k,vid,btn,nxt,label){
+ const W=WRITE[k],v=norm(el(W.id).value),raw=(el(W.id).value||'').trim();
+ let n=0;
+ W.c.forEach((c,i)=>{const good=raw.length>=W.min&&c.w.some(w=>v.indexOf(norm(w))>=0);
+  const li=el(W.id+'c'+i);li.className='crit '+(good?'ok':'bad');if(good)n++});
+ el(W.id).disabled=true;el(W.id+'cr').classList.add('show');
+ if(raw.length<W.min)el(W.id+'warn').classList.add('show');
+ addScore(n);res[label]=n+' / 5';
+ el(vid).textContent='Засчитано: '+n+' из 5';el(vid).className='verdict '+(n>=4?'ok':'bad');
+ el(btn).disabled=true;el(nxt).disabled=false;tstop();fx(n===5)}
+let d12=false,d13=false;
+function check12(){if(d12)return;d12=true;checkWrite(0,'v12','bt12','nx12','Деловое сообщение')}
+function check13(){if(d13)return;d13=true;checkWrite(1,'v13','bt13','nx13','Разбор ситуации')}
+
+/* --- уникальный код --- */
+const SALT='chips-1.5-kmA';
+const AL='0123456789ABCDEFGHJKLMNPQRSTUVWX'; /* 32 символа без I,O,Y,Z */
+function h32(t){let h=2166136261>>>0;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)>>>0}return h>>>0}
+function nname(t){return norm(t).replace(/\s+/g,' ')}
+function enc(n,len){let r='';for(let i=0;i<len;i++){r=AL[n%32]+r;n=Math.floor(n/32)}return r}
+function dec(t){let n=0;for(const c of t){const v=AL.indexOf(c);if(v<0)return -1;n=n*32+v}return n}
+const EPOCH=Date.UTC(2026,0,1);
+function mkCode(name,sc){
+ const m=Math.floor((Date.now()-EPOCH)/60000), r=Math.floor(Math.random()*1024);
+ const raw=enc(sc,2)+enc(m,5)+enc(r,2);
+ const key=h32(SALT+'|'+nname(name));let x='';
+ for(let i=0;i<raw.length;i++)x+=AL[(AL.indexOf(raw[i])+((key>>>(i*3))&31))%32];
+ const sig=enc(h32(SALT+'#'+nname(name)+'#'+raw)%33554432,5);
+ const c=x+sig+enc(h32(x+sig)%32,1);
+ return c.slice(0,5)+'-'+c.slice(5,10)+'-'+c.slice(10,15)}
+function readCode(name,code){
+ const c=String(code).toUpperCase().replace(/[^0-9A-Z]/g,'').replace(/O/g,'0').replace(/I/g,'1');
+ if(c.length!==15)return null;
+ const x=c.slice(0,9),sig=c.slice(9,14);
+ if(enc(h32(x+sig)%32,1)!==c[14])return null;
+ const key=h32(SALT+'|'+nname(name));let raw='';
+ for(let i=0;i<9;i++){const v=AL.indexOf(x[i]);if(v<0)return null;raw+=AL[(v-((key>>>(i*3))&31)+64)%32]}
+ if(enc(h32(SALT+'#'+nname(name)+'#'+raw)%33554432,5)!==sig)return null;
+ return {score:dec(raw.slice(0,2)),time:new Date(EPOCH+dec(raw.slice(2,7))*60000)}}
+let CODE='';
 
 /* --- итог --- */
 function grade(p){return p>=.88?5:p>=.72?4:p>=.55?3:p>=.35?2:1}
@@ -575,12 +734,14 @@ function fin(){tstop();el('tm').textContent='—';el('tm').className='badge';
  el('fgs').textContent={5:'отлично',4:'хорошо',3:'удовлетворительно',2:'неудовлетворительно',1:'тему нужно повторить'}[g];
  el('fsc').textContent=score;el('fmax').textContent=MAXSUM;
  el('fwho').textContent=el('name').value||'';
+ if(!CODE)CODE=mkCode(el('name').value,score);el('fcode').textContent=CODE;
  let h='';for(const k in res)h+='<tr><td>'+k+'</td><td>'+res[k]+'</td></tr>';
  el('ftab').innerHTML=h}
 function dl(){const name=el('name').value||'без имени';
  let s='Тема 1.5. Интерактивная работа\nСтудент: '+name+'\nОценка: '+grade(score/MAXSUM)+
-  '\nБаллы: '+score+' из '+MAXSUM+'\n\n';
+  '\nБаллы: '+score+' из '+MAXSUM+'\nКод: '+CODE+'\n\n';
  for(const k in res)s+=k+': '+res[k]+'\n';
+ WRITE.forEach(W=>{const t=el(W.id);if(t&&t.value.trim())s+='\n--- '+W.task.slice(0,48)+'... ---\n'+t.value.trim()+'\n'});
  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
  if(ios||typeof document.createElement('a').download==='undefined'){
   const w=el('copybox');w.style.display='block';w.querySelector('textarea').value=s;return}
@@ -592,8 +753,8 @@ function copyAll(){const t=el('copybox').querySelector('textarea');t.select();t.
 
 /* ===================== РАЗМЕТКА ===================== */
 const M=el('main');
-function sec(html){const s=document.createElement('section');s.innerHTML=html;M.appendChild(s);return s}
-function head(n,t,sub,pts){return '<h2>Блок '+n+'. '+t+'</h2><p class="sub">'+sub+' '+pts+' баллов.</p>'}
+const SECS=[];function sec(html){const s=document.createElement('section');s.innerHTML=html;SECS.push(s);return s}
+function head(n,t,sub,pts){return '<h2>Блок <span class="bno"></span>. '+t+'</h2><p class="sub">'+sub+' '+pts+' баллов.</p>'}
 function navr(n){return '<div class="nav"><button id="bt'+n+'" onclick="check'+n+'()">Проверить</button>'+
  '<button class="ghost" id="nx'+n+'" onclick="go(1)" disabled>Дальше →</button>'+
  '<span class="verdict" id="v'+n+'"></span></div>'}
@@ -602,44 +763,55 @@ sec(`<div class="start"><h2>Интерактивная работа по тем�
  <p class="sub">Межличностное общение в профессиональном сообществе · Престиж профессии · Роли в трудовом коллективе</p>
  <p>Введите фамилию и имя — они появятся на итоговом экране, который вы покажете преподавателю.</p>
  <p style="margin:12px 0"><input type="text" id="name" placeholder="Фамилия, имя" autocomplete="off"></p>
- <p>Работа состоит из десяти блоков. На каждый даётся своё время, таймер идёт сверху. Когда время заканчивается,
+ <p>Работа состоит из тринадцати блоков, порядок блоков и заданий у каждого свой. На каждый даётся своё время, таймер идёт сверху. Когда время заканчивается,
   блок проверяется автоматически. Вернуться к пройденному блоку нельзя. В конце выставляется оценка от 1 до 5.</p>
  <div class="nav"><button onclick="if(!el('name').value.trim()){alert('Введите фамилию и имя');return} go(1)">Начать работу</button></div></div>`);
 
-sec(head(1,'Три стороны общения','Щёлкните по примеру, затем по нужному полю.',12)+
+sec(head(1,'Три стороны общения','Щёлкните по примеру, затем по нужному полю.',15)+
  '<div class="pool" id="pool1"></div><div class="bins" id="bins1"></div>'+navr(1));
 
-sec(head(2,'Роль в коллективе и ожидания','Щёлкните по роли слева, затем по ожиданию справа.',8)+
+sec(head(2,'Роль в коллективе и ожидания','Щёлкните по роли слева, затем по ожиданию справа.',10)+
  '<div class="match"><div class="col"><h3>Роль</h3><div id="mL"></div></div>'+
  '<div class="col"><h3>Чего ждёт коллектив</h3><div id="mR"></div></div></div>'+navr(2));
 
-sec(head(3,'Предписанный и достигаемый статус','Распределите статусы по двум полям.',10)+
+sec(head(3,'Предписанный и достигаемый статус','Распределите статусы по двум полям.',12)+
  '<div class="pool" id="pool3"></div><div class="bins" id="bins3"></div>'+navr(3));
 
-sec(head(4,'Верно или неверно','Выберите ответ для каждого суждения.',10)+'<div id="q4"></div>'+navr(4));
+sec(head(4,'Верно или неверно','Выберите ответ для каждого суждения.',14)+'<div id="q4"></div>'+navr(4));
 
-sec(head(5,'Стратегия поведения в конфликте','Выберите стратегию, уместную в каждой ситуации.',8)+
+sec(head(5,'Стратегия поведения в конфликте','Выберите стратегию, уместную в каждой ситуации.',10)+
  '<div id="q5"></div>'+navr(5));
 
-sec(head(6,'Найди лишнее','В каждом ряду одно понятие выпадает из общего основания.',5)+
+sec(head(6,'Найди лишнее','В каждом ряду одно понятие выпадает из общего основания.',7)+
  '<div id="q6"></div>'+navr(6));
 
-sec(head(7,'От чего зависит престиж профессии','Отметьте все подходящие факторы. Лишние отметки снижают результат.',6)+
+sec(head(7,'От чего зависит престиж профессии','Отметьте все подходящие факторы. Лишние отметки снижают результат.',8)+
  '<div class="opts" id="q7"></div>'+navr(7));
 
-sec(head(8,'Ошибки делового общения','В каждом случае выберите, что нарушено.',7)+'<div id="q8"></div>'+navr(8));
+sec(head(8,'Ошибки делового общения','В каждом случае выберите, что нарушено.',9)+'<div id="q8"></div>'+navr(8));
 
-sec(head(9,'Термины в тексте','Выберите подходящий термин в каждом пропуске.',8)+
+sec(head(9,'Термины в тексте','Выберите подходящий термин в каждом пропуске.',10)+
  '<div class="gap" id="q9"></div>'+navr(9));
 
-sec(head(10,'Порядок шагов','Расставьте стрелками шаги разрешения конфликта по порядку.',6)+
+sec(head(10,'Порядок шагов','Расставьте стрелками шаги разрешения конфликта по порядку.',8)+
  '<div class="ord" id="q10"></div>'+navr(10));
+
+sec(head(11,'Впишите термин','Подсказок нет. Пишите термин словами, падеж значения не имеет.',8)+
+ '<div id="q11"></div>'+navr(11));
+
+sec(head(12,'Деловое сообщение','Напишите текст сообщения целиком, как отправили бы его на самом деле.',5)+
+ '<div id="q12"></div>'+navr(12));
+
+sec(head(13,'Разбор ситуации','Ответ в несколько предложений. Важно назвать все нарушения и способ исправить.',5)+
+ '<div id="q13"></div>'+navr(13));
 
 sec(`<div id="fin"><div class="who" id="fwho"></div>
  <div class="gsub">Оценка за работу</div>
  <div class="grade" id="fg">—</div>
  <div class="mark" id="fgs"></div>
  <div style="font-size:19px;margin-top:10px;color:#9fb0d4"><span id="fsc">0</span> из <span id="fmax">0</span> баллов</div>
+ <div class="gsub" style="margin-top:22px">Ваш код — покажите преподавателю</div>
+ <div id="fcode" class="code"></div>
  <table id="ftab"></table>
  <div id="copybox" style="display:none;margin-top:16px;text-align:left">
   <textarea readonly style="min-height:150px"></textarea>
@@ -647,13 +819,17 @@ sec(`<div id="fin"><div class="who" id="fwho"></div>
  <div class="nav" style="justify-content:center"><button class="ghost" onclick="dl()">Сохранить результат</button>
   <button class="ghost" onclick="if(confirm('Начать заново?'))location.reload()">Пройти заново</button></div></div>`);
 
+/* порядок секций = порядок BLOCKS */
+(function(){const ids=['start','b1','b2','b3','b4','b5','b6','b7','b8','b9','b10','b11','b12','b13','fin'];
+ BLOCKS.forEach((b,pos)=>{const s=SECS[ids.indexOf(b.id)];const n=s.querySelector('.bno');if(n)n.textContent=pos;M.appendChild(s)})})();
+
 /* ===================== НАПОЛНЕНИЕ ===================== */
 (function(){
  mkSort('pool1','bins1',CARDS,BINS,st1);
  mkSort('pool3','bins3',SCARDS,SBINS,st3);
 
  const L=el('mL'),R=el('mR');
- PAIRS.forEach((p,i)=>{const a=document.createElement('div');a.className='mi';a.textContent=p[0];a.dataset.i=i;
+ shuf(PAIRS.map((p,i)=>i)).forEach(i=>{const p=PAIRS[i];const a=document.createElement('div');a.className='mi';a.textContent=p[0];a.dataset.i=i;
   a.onclick=()=>{if(d2)return;
    if(links[i]!==undefined){const o=R.querySelector('[data-j="'+links[i]+'"]');o.classList.remove('linked');
     o.removeAttribute('data-pair');a.classList.remove('linked');a.removeAttribute('data-pair');delete links[i];return}
@@ -661,7 +837,7 @@ sec(`<div id="fin"><div class="who" id="fwho"></div>
    if(selL===a){selL=null;return}a.classList.add('sel');selL=a;
    if(innerWidth<860)R.scrollIntoView({behavior:'smooth',block:'start'})};
   L.appendChild(a)});
- PAIRS.map((p,i)=>i).sort(()=>Math.random()-.5).forEach(j=>{
+ shuf(PAIRS.map((p,i)=>i)).forEach(j=>{
   const b=document.createElement('div');b.className='mi';b.textContent=PAIRS[j][1];b.dataset.j=j;
   b.onclick=()=>{if(d2||!selL)return;if(Object.values(links).includes(j))return;
    const i=+selL.dataset.i,n=Object.keys(links).length+1;
@@ -687,13 +863,13 @@ sec(`<div id="fin"><div class="who" id="fwho"></div>
   d.innerHTML='<div class="lab">'+esc(r.lab)+'</div><div class="row" id="od'+i+'"></div>'+
    '<div class="why" id="wod'+i+'">'+esc(r.x)+'</div>';
   q6.appendChild(d);const row=d.querySelector('.row');
-  r.w.map((t,j)=>j).sort(()=>Math.random()-.5).forEach(j=>{const t=r.w[j];
+  shuf(r.w.map((t,j)=>j)).forEach(j=>{const t=r.w[j];
    const w=document.createElement('div');w.className='w';w.textContent=t;w.dataset.j=j;
    w.onclick=()=>{if(d6)return;row.querySelectorAll('.w').forEach(x=>x.classList.remove('sel'));w.classList.add('sel')};
    row.appendChild(w)})});
 
  const q7=el('q7');
- Q4.map((q,i)=>i).sort(()=>Math.random()-.5).forEach(i=>{
+ shuf(Q4.map((q,i)=>i)).forEach(i=>{
   const d=document.createElement('div');d.className='opt';d.textContent=Q4[i].t;d.dataset.i=i;
   d.onclick=()=>{if(!d7)d.classList.toggle('sel')};q7.appendChild(d)});
 
@@ -702,8 +878,39 @@ sec(`<div id="fin"><div class="who" id="fwho"></div>
    GOPTS.map(o=>'<option>'+esc(o)+'</option>').join('')+'</select>'});
  el('q9').innerHTML=html;
 
- ord=ORDER.map((v,i)=>i).sort(()=>Math.random()-.5);draw10();
+
+ const q11=el('q11');
+ TERMS.forEach((t,i)=>{const d=document.createElement('div');d.className='term';
+  d.innerHTML='<div class="d">'+(i+1)+'. '+esc(t.d)+'</div>'+
+   '<input type="text" id="tr'+i+'" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="введите термин">'+
+   '<div class="ans" id="ta'+i+'"></div>';
+  q11.appendChild(d)});
+
+ WRITE.forEach((W,i)=>{const host=el(i===0?'q12':'q13');
+  host.innerHTML='<div class="case">'+esc(W.task)+'</div>'+
+   '<div class="hint">'+esc(W.hint)+' Не менее '+W.min+' символов.</div>'+
+   '<textarea id="'+W.id+'" placeholder="Ваш ответ"></textarea>'+
+   '<div class="warn" id="'+W.id+'warn">Ответ короче '+W.min+' символов — засчитать его нельзя.</div>'+
+   '<div class="crits" id="'+W.id+'cr">'+W.c.map((c,j)=>
+     '<div class="crit" id="'+W.id+'c'+j+'">'+esc(c.n)+'</div>').join('')+'</div>'});
+
+ do{ord=shuf(ORDER.map((v,i)=>i))}while(ord.every((v,i)=>v===i));draw10();
+ if(location.hash==='#check'){tstop=function(){};startCheck();return}
  show();
 })();
+function startCheck(){
+ el('hname').innerHTML='Проверка кодов<small>Тема 1.5 · для преподавателя</small>';
+ document.querySelectorAll('header .badge').forEach(b=>b.style.display='none');
+ el('pb').parentNode.style.display='none';
+ M.innerHTML='<section class="on" id="chk"><h2>Проверка кода</h2>'+
+  '<p class="sub">Введите фамилию и имя точно так, как студент написал их в начале работы, и код с итогового экрана.</p>'+
+  '<label>Фамилия, имя</label><input type="text" id="cn" autocomplete="off">'+
+  '<label>Код</label><input type="text" id="cc" autocomplete="off" autocapitalize="characters" placeholder="XXXXX-XXXXX-XXXXX">'+
+  '<div class="nav"><button id="cb">Проверить</button></div><div id="cr"></div></section>';
+ el('cb').onclick=()=>{const r=readCode(el('cn').value,el('cc').value),o=el('cr');
+  if(!r||r.score>MAXSUM){o.className='res bad';o.innerHTML='Код не подходит к этому имени. Он подделан, введён с ошибкой или имя написано иначе, чем в работе.';return}
+  const g=grade(r.score/MAXSUM);
+  o.className='res ok';o.innerHTML='Код настоящий.<br>Баллы: <b>'+r.score+' из '+MAXSUM+'</b><br>Оценка: <b>'+g+'</b><br>Работа завершена: '+
+   r.time.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}}
 </script>
 </body></html>
